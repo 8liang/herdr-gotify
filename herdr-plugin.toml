@@ -1,0 +1,17 @@
+# Herdr Gotify Notifications plugin manifest.
+#
+# Schema reference: https://herdr.dev/docs/plugins/
+
+id = "fuliang.herdr-gotify"
+name = "Herdr Gotify Notifications"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Send Herdr agent blocked/done notifications to Gotify"
+platforms = ["macos", "linux"]
+
+# The plugin root is the working directory of every command, so the hook can
+# run the script as ./notify.sh. Herdr does not run commands through a shell:
+# argv is passed as-is, no redirection, pipes, or environment expansion here.
+[[events]]
+on = "pane.agent_status_changed"
+command = ["bash", "./notify.sh"]
