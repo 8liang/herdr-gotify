@@ -2,7 +2,7 @@
 #
 # Schema reference: https://herdr.dev/docs/plugins/
 
-id = "fuliang.herdr-gotify"
+id = "8liang.herdr-gotify"
 name = "Herdr Gotify Notifications"
 version = "0.1.0"
 min_herdr_version = "0.7.0"

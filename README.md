@@ -44,14 +44,14 @@ Install from GitHub (the plugin is also listed on the
 topic):
 
 ```sh
-herdr plugin install <owner>/herdr-gotify
+herdr plugin install 8liang/herdr-gotify
 ```
 
 Herdr clones the repository, registers the plugin, and creates its config
 directory. Then create the config file in the directory Herdr prints:
 
 ```sh
-CONFIG_DIR="$(herdr plugin config-dir fuliang.herdr-gotify)"
+CONFIG_DIR="$(herdr plugin config-dir 8liang.herdr-gotify)"
 cp config.env.example "$CONFIG_DIR/config.env"
 chmod 600 "$CONFIG_DIR/config.env"
 $EDITOR "$CONFIG_DIR/config.env"
@@ -92,7 +92,7 @@ A locally linked plugin must be unlinked before `herdr plugin install` can
 manage the same plugin id:
 
 ```sh
-herdr plugin unlink fuliang.herdr-gotify
+herdr plugin unlink 8liang.herdr-gotify
 ```
 
 ## Testing
@@ -123,14 +123,14 @@ bash notify.sh
 Watch failures in Herdr's plugin log:
 
 ```sh
-herdr plugin log list --plugin fuliang.herdr-gotify
+herdr plugin log list --plugin 8liang.herdr-gotify
 ```
 
 ## Configuration
 
 All settings are optional; the table shows the defaults. Put overrides in
 `config.env` under the plugin config directory (printed by `herdr plugin
-config-dir fuliang.herdr-gotify`), or export them in the environment of the
+config-dir 8liang.herdr-gotify`), or export them in the environment of the
 Herdr server process. Environment variables take precedence over `config.env`.
 
 | Variable                   | Default | What it does                                            |
@@ -173,7 +173,7 @@ and captured stdout/stderr, so a curl failure surfaces as the hook's stderr
 line:
 
 ```sh
-herdr plugin log list --plugin fuliang.herdr-gotify
+herdr plugin log list --plugin 8liang.herdr-gotify
 ```
 
 Missing `GOTIFY_URL`/`GOTIFY_TOKEN` is reported there as a skip (exit 0),
