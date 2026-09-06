@@ -6,7 +6,7 @@ your input) or **done** (finished background work). Idle, working and unknown
 transitions are ignored, so it never floods you.
 
 A Bash event hook — no build step, no dependencies beyond `bash`, `python3`,
-and `curl`.
+and `curl`. Works on macOS and Linux.
 
 ## How it works
 
@@ -39,14 +39,16 @@ Requires Herdr ≥ 0.7.0 on macOS or Linux, and `curl` on the machine running th
 Herdr server. `python3` is only used to parse the event JSON; the script falls
 back to a no-op if it is missing.
 
-Link the local checkout:
+Install from GitHub (the plugin is also listed on the
+[Herdr marketplace](https://herdr.dev/plugins/) under the `herdr-plugin`
+topic):
 
 ```sh
-herdr plugin link /path/to/herdr-gotify
+herdr plugin install <owner>/herdr-gotify
 ```
 
-Herdr registers the plugin immediately and creates its config directory.
-Then create the config file in the directory Herdr prints:
+Herdr clones the repository, registers the plugin, and creates its config
+directory. Then create the config file in the directory Herdr prints:
 
 ```sh
 CONFIG_DIR="$(herdr plugin config-dir fuliang.herdr-gotify)"
@@ -65,18 +67,32 @@ GOTIFY_TOKEN="your-application-token"
 Create the token in Gotify under **Apps** → *Create Application*. It grants
 push-only access to that one app.
 
-Enable the plugin and list it:
+Verify the plugin is enabled:
 
 ```sh
-herdr plugin enable fuliang.herdr-gotify
 herdr plugin list
 ```
 
-### Installing from GitHub (published later)
+### Note for Herdr releases before 0.8.2
+
+If your Herdr version is older than the one that ships plugin config
+directories, copy `config.env.example` to `config.env` next to `notify.sh`
+instead (the hook reads `./config.env` as a development fallback).
+
+### Developing locally
+
+While working on the plugin itself, link the local checkout instead of
+installing:
 
 ```sh
-herdr plugin install <owner>/herdr-gotify
-herdr plugin config-dir fuliang.herdr-gotify
+herdr plugin link /path/to/herdr-gotify
+```
+
+A locally linked plugin must be unlinked before `herdr plugin install` can
+manage the same plugin id:
+
+```sh
+herdr plugin unlink fuliang.herdr-gotify
 ```
 
 ## Testing

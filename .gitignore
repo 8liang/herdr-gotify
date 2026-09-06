@@ -1,2 +1,5 @@
 # Local config for development — contains secrets. Never commit.
 config.env
+
+# Any local .env-style files (defense in depth).
+*.env
