@@ -5,6 +5,11 @@ notification to your phone when an agent pane turns **blocked** (waiting for
 your input) or **done** (finished background work). Idle, working and unknown
 transitions are ignored, so it never floods you.
 
+Optionally, when summary mode is enabled, the hook reads the tail of the
+pane's recent output (`herdr pane read`), sends it to an LLM, and pushes the
+resulting one-sentence summary as the notification body — so your phone shows
+*what the agent actually did*, not just that it finished.
+
 A Bash event hook — no build step, no dependencies beyond `bash`, `python3`,
 and `curl`. Works on macOS and Linux.
 
@@ -32,6 +37,20 @@ directory as its working directory and injects:
 `notify.sh` exits immediately for any status other than `blocked`/`done`, and
 when neither `config.env` nor the environment provides `GOTIFY_URL` and
 `GOTIFY_TOKEN`.
+
+When `SUMMARY_ENABLED=true`, the flow for a blocked/done event is:
+
+```text
+status -> blocked/done
+  -> notify.sh reads HERDR_PLUGIN_EVENT_JSON for pane_id
+  -> herdr pane read <pane_id> --source recent-unwrapped --lines N
+  -> tail of the pane output + task title  -> summarize.py -> LLM
+  -> one-sentence summary becomes the Gotify message body
+```
+
+Every summary step is best-effort: a pane that can't be read, a missing API
+key, an unreachable model endpoint, a timeout, or an empty model reply all
+fall back to the plain message, so a notification is never lost.
 
 ## Install
 
@@ -142,6 +161,16 @@ Herdr server process. Environment variables take precedence over `config.env`.
 | `NOTIFY_BLOCKED`           | `true`  | Set `false` to stop blocked notifications.              |
 | `NOTIFY_DONE`              | `true`  | Set `false` to stop done notifications.                 |
 | `GOTIFY_ALSO_HERDR_NOTIFY` | `false` | Also show a local Herdr desktop notification (`herdr notification show`). |
+| `SUMMARY_ENABLED`          | `false` | Set `true` to summarize the pane's recent output and push the summary as the body. |
+| `SUMMARY_PROTOCOL`         | `openai`| LLM API protocol: `openai` (OpenAI-compatible chat/completions) or `anthropic` (`/v1/messages`). |
+| `SUMMARY_API_URL`          | —       | Model service base URL (e.g. `https://api.deepseek.com`); the endpoint path is appended automatically. |
+| `SUMMARY_API_KEY`          | —       | Model API key (sent as `Authorization: Bearer`, or `x-api-key` for Anthropic). |
+| `SUMMARY_MODEL`            | —       | Model name, e.g. `deepseek-chat`, `gpt-4o-mini`, `claude-3-5-haiku-latest`. |
+| `SUMMARY_LINES`            | `60`    | Lines of recent pane output to read for the summary.    |
+| `SUMMARY_MAX_CHARS`        | `6000`  | Characters of pane output actually sent to the model.   |
+| `SUMMARY_TIMEOUT_MS`       | `30000` | LLM request timeout; on timeout/failure the plain message is sent instead. |
+| `SUMMARY_LANG`             | `zh`    | Summary language: `zh` or `en` (used for the built-in prompt). |
+| `SUMMARY_PROMPT`           | —       | Custom system prompt; empty uses the built-in prompt for `SUMMARY_LANG`. |
 
 ### Strategy note
 
@@ -157,12 +186,45 @@ working → no notification
 unknown → no notification
 ```
 
+### AI summary (optional)
+
+Set `SUMMARY_ENABLED=true` to replace the body of blocked/done notifications
+with a one-sentence summary of what the agent was doing. The hook reads the
+tail of the pane's recent output through the Herdr socket API, sends it to an
+LLM via `summarize.py` (Python 3 standard library, no extra dependencies), and
+posts the summary. Two protocols are supported:
+
+- `SUMMARY_PROTOCOL=openai` — OpenAI-compatible `chat/completions`; covers
+  OpenAI, DeepSeek, Qwen/DashScope, Ollama, and most other gateways.
+- `SUMMARY_PROTOCOL=anthropic` — Anthropic `/v1/messages`.
+
+`SUMMARY_API_URL` is a *base URL*; the endpoint path is appended automatically
+(`/v1/chat/completions` or `/v1/messages`). An example for DeepSeek:
+
+```sh
+SUMMARY_ENABLED=true
+SUMMARY_PROTOCOL=openai
+SUMMARY_API_URL=https://api.deepseek.com
+SUMMARY_API_KEY=sk-xxxxxxxx
+SUMMARY_MODEL=deepseek-chat
+```
+
+The summary request runs synchronously inside the hook (bounded by
+`SUMMARY_TIMEOUT_MS`) so the notification you receive already contains the
+summary. Because the hook is best-effort, a notification is *never* lost —
+any failure (no pane id, missing settings, unreadable pane output, network or
+timeout, empty model reply) falls back to the plain message and is logged to
+the plugin log. Note that output produced on the terminal's alternate screen
+may not be readable back through `herdr pane read`; in that case the plain
+message is used.
+
 ## Files
 
 | Path                  | Purpose                                                    |
 | --------------------- | ---------------------------------------------------------- |
 | `herdr-plugin.toml`   | Manifest: registers the event hook for `pane.agent_status_changed`. |
-| `notify.sh`           | The hook: reads the event, filters, posts to Gotify.       |
+| `notify.sh`           | The hook: reads the event, filters, summarizes (optional), posts to Gotify. |
+| `summarize.py`        | Optional LLM summarizer used when `SUMMARY_ENABLED=true`. |
 | `config.env.example`  | Documented configuration template.                         |
 
 ## Troubleshooting

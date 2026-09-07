@@ -3,3 +3,6 @@ config.env
 
 # Any local .env-style files (defense in depth).
 *.env
+
+# Python bytecode caches (from summarize.py).
+__pycache__/
