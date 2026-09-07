@@ -1,5 +1,7 @@
 # herdr-gotify
 
+**English** · [简体中文](README.zh-CN.md)
+
 [Herdr](https://herdr.dev) plugin that pushes a [Gotify](https://gotify.net/)
 notification to your phone when an agent pane turns **blocked** (waiting for
 your input) or **done** (finished background work). Idle, working and unknown
