@@ -24,7 +24,10 @@ import urllib.error
 import urllib.request
 
 DEFAULT_TIMEOUT_MS = 30000
-DEFAULT_MAX_TOKENS = 200
+# max_tokens sent to the model. The prompt asks for <=100 Chinese chars /
+# <=120 English chars, which is roughly 150-250 tokens; 300 leaves headroom so
+# the model can finish the sentence instead of being cut off mid-word.
+DEFAULT_MAX_TOKENS = 300
 
 PROMPT_ZH = (
     "你是一个技术助手。请根据任务与执行结果生成一句简短中文摘要"
@@ -213,7 +216,7 @@ def sanitize_summary(text):
     cleaned = " ".join(value.split())
     cleaned = cleaned.strip("\"'`")
     cleaned = trim(cleaned)
-    return truncate(cleaned, 160)
+    return cleaned
 
 
 # ---------------------------------------------------------------------------

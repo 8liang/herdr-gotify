@@ -185,7 +185,6 @@ try_summary() {
         echo "herdr-gotify: summary skipped (LLM call failed, falling back)" >&2
         return 1
     }
-    summary="$(printf '%s' "$summary" | head -c 200)"
 
     if [ -z "$summary" ]; then
         echo "herdr-gotify: summary skipped (empty result, falling back)" >&2
