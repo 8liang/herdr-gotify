@@ -292,8 +292,6 @@ MESSAGE="${WHERE}"
 if [ "$SUMMARY_ENABLED" = "true" ]; then
     if [ -z "$PANE_ID" ]; then
         echo "herdr-gotify: summary skipped (no pane id in event)" >&2
-    elif [ -z "$SUMMARY_API_URL" ] || [ -z "$SUMMARY_API_KEY" ] || [ -z "$SUMMARY_MODEL" ]; then
-        echo "herdr-gotify: summary skipped (SUMMARY_API_URL/API_KEY/MODEL not set)" >&2
     else
         SUMMARY="$(try_summary "$PANE_ID" "$TASK")"
         if [ -n "$SUMMARY" ]; then

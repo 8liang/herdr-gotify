@@ -129,7 +129,11 @@ def default_prompt(lang):
 
 
 def build_request(protocol, url, api_key, model, system_prompt, user_content):
-    """Return (headers, body_dict)."""
+    """Return (headers, body_dict) for the given protocol.
+
+    anthropic sends the key as x-api-key (standard Anthropic); openai-compatible
+    sends it as Authorization: Bearer.
+    """
     if protocol == "anthropic":
         payload = {
             "model": model,
@@ -237,16 +241,24 @@ def main(argv):
         )
         return 2
 
-    api_url = env_str("SUMMARY_API_URL")
-    api_key = env_str("SUMMARY_API_KEY")
-    model = env_str("SUMMARY_MODEL")
     timeout_ms = env_int("SUMMARY_TIMEOUT_MS", DEFAULT_TIMEOUT_MS)
     timeout_s = max(1, timeout_ms / 1000.0)
 
-    if not api_url or not api_key or not model:
+    api_url = env_str("SUMMARY_API_URL")
+    api_key = env_str("SUMMARY_API_KEY")
+    model = env_str("SUMMARY_MODEL")
+
+    missing = []
+    if not api_url:
+        missing.append("SUMMARY_API_URL")
+    if not model:
+        missing.append("SUMMARY_MODEL")
+    if not api_key:
+        missing.append("SUMMARY_API_KEY")
+    if missing:
         print(
-            "herdr-gotify: SUMMARY_API_URL/SUMMARY_API_KEY/SUMMARY_MODEL "
-            "must all be set; skipping summary",
+            "herdr-gotify: missing config for summary (%s); skipping summary"
+            % ", ".join(missing),
             file=sys.stderr,
         )
         return 2
